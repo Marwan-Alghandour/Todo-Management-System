@@ -1,0 +1,94 @@
+﻿@model IEnumerable<TodoResponse>
+@{
+    ViewData["Title"] = "Todo App";
+}
+
+<h1 class="d-flex justify-content-between align-items-center">
+    Todo List
+    <a asp-action="Create" asp-controller="Todo" class="btn btn-primary">+ Create Todo</a>
+</h1>
+
+
+<table class="table table-bordered table-hover" id="todoTable">
+    <thead class="table-dark">
+        <tr>
+            <th>Id</th>
+            <th>Title</th>
+            <th>Description</th>
+            <th>
+                <form method="GET">
+                    <select name="status" class="form-select" onchange="this.form.submit()">
+                        <option value="">All</option>
+                        @foreach (var item in Html.GetEnumSelectList<Status>())
+                        {
+                            if (@Enum.GetName(typeof(Status), Enum.Parse(typeof(Status), item.Value.ToString())) == ViewBag.status)
+                            {
+                                <option value="@Enum.GetName(typeof(Status), Enum.Parse(typeof(Status), item.Value.ToString()))" selected>@item.Text</option>
+                            }
+                            else 
+                            {
+                                <option value="@Enum.GetName(typeof(Status), Enum.Parse(typeof(Status), item.Value.ToString()))">@item.Text</option>
+                            }
+                        }
+                    </select>
+                </form>
+            </th>
+            <th>Priority</th>
+            <th>Due Date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model != null)
+        {
+            @foreach (TodoResponse todo in Model)
+            {
+                <tr>
+                    <td>@todo.Id</td>
+                    <td>@todo.Title</td>
+                    <td>@todo.Description</td>
+                    <td>@todo.Status</td>
+                    <td>@todo.Priority</td>
+                    <td>@(todo.DueDate?.ToString("dd-MM-yyyy") ?? "N/A")</td>
+                    <td class="d-flex justify-content-around">
+                        <a asp-action="Edit" asp-controller="Todo" asp-route-id="@todo.Id" class="btn btn-warning">Edit</a>
+                        <a href="#" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="@todo.Id">Delete</a>
+
+                        @if (todo.Status != "Completed")
+                        {
+                            <a asp-action="MarkAsCompleted" asp-controller="Todo" asp-route-id="@todo.Id" class="btn btn-success">Completed</a>
+                        }
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this todo?
+            </div>
+            <div class="modal-footer justify-content-around">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="GET">
+                    <button type="submit" class="btn btn-danger">Yes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $('#deleteModal').on('show.bs.modal', function (event) {
+            const id = $(event.relatedTarget).data('id');
+            $('#deleteForm').attr('action', `Todo/Delete/${id}`);
+        });
+    </script>
+}
